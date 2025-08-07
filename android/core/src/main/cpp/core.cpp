@@ -56,7 +56,7 @@ call_tun_interface_resolve_process_impl(void *tun_interface, int protocol,
                                                                              new_string(source),
                                                                              new_string(target),
                                                                              uid));
-    const scoped_string sp = get_string(packageName);
+    scoped_string sp = get_string(packageName);
     return sp;
 }
 
@@ -66,7 +66,7 @@ call_invoke_interface_result_impl(void *invoke_interface, const char *data) {
     const auto res = reinterpret_cast<jstring>(env->CallObjectMethod(static_cast<jobject>(invoke_interface),
                                                                      m_invoke_interface_result,
                                                                      new_string(data)));
-    const scoped_string sr = get_string(res);
+    scoped_string sr = get_string(res);
     return sr;
 }
 
