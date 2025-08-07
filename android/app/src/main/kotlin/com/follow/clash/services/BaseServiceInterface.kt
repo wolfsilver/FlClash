@@ -66,6 +66,10 @@ fun Service.createFlClashNotificationBuilder(): Deferred<NotificationCompat.Buil
             )
             setShowWhen(false)
             setOnlyAlertOnce(true)
+            // 隐藏状态栏图标，特别针对VPN等后台服务
+            setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            // 设置静默模式，避免打扰用户
+            setSilent(true)
         }
     }
 
@@ -76,8 +80,17 @@ fun Service.startForeground(notification: Notification) {
         var channel = manager?.getNotificationChannel(GlobalState.NOTIFICATION_CHANNEL)
         if (channel == null) {
             channel = NotificationChannel(
-                GlobalState.NOTIFICATION_CHANNEL, "SERVICE_CHANNEL", NotificationManager.IMPORTANCE_LOW
+                GlobalState.NOTIFICATION_CHANNEL, "SERVICE_CHANNEL", NotificationManager.IMPORTANCE_MIN
             )
+            // 进一步减少通知的干扰性，特别适用于VPN等后台服务
+            channel.setShowBadge(false)
+            channel.enableLights(false)
+            channel.enableVibration(false)
+            channel.setSound(null, null)
+            // 对于Android 8.0+，尝试隐藏状态栏图标
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                channel.lockscreenVisibility = Notification.VISIBILITY_SECRET
+            }
             manager?.createNotificationChannel(channel)
         }
     }

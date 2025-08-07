@@ -138,8 +138,8 @@ jobs:
           git add CHANGELOG.md
           if ! git diff --cached --quiet; then
             echo "Commit pushing"
-            git config --local user.email "chen08209@gmail.com"
-            git config --local user.name "chen08209"
+            git config --local user.email "2452450+wolfsilver@users.noreply.github.com"
+            git config --local user.name "wolfsilver"
             git commit -m "Update changelog"
             git push
             if [ $? -eq 0 ]; then
@@ -205,15 +205,15 @@ jobs:
             currentTag=$tag
           done
 
-      - name: Push to telegram
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TAG: ${{ github.ref_name }}
-          RUN_ID: ${{ github.run_id }}
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
-          python release_telegram.py
+      # - name: Push to telegram
+      #   env:
+      #     TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      #     TAG: ${{ github.ref_name }}
+      #     RUN_ID: ${{ github.run_id }}
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install requests
+      #     python release_telegram.py
 
       - name: Patch release.md
         run: |
@@ -226,7 +226,7 @@ jobs:
           cd ./dist
           for file in $(find . -type f -not -name "*.sha256"); do
             sha256sum "$file" > "${file}.sha256"
-          done  
+          done
 
       - name: Release
         if: ${{ env.IS_STABLE == 'true' }}
@@ -242,18 +242,18 @@ jobs:
           cp ./dist/*android-arm64-v8a* ./tmp/ || true
           echo "Files copied successfully"
 
-      - name: Push to fdroid repo
-        if: ${{ env.IS_STABLE == 'true' }}
-        uses: cpina/github-action-push-to-another-repository@v1.7.2
-        env:
-          SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-        with:
-          source-directory: ./tmp/
-          destination-github-username: chen08209
-          destination-repository-name: FlClash-fdroid-repo
-          user-name: 'github-actions[bot]'
-          user-email: 'github-actions[bot]@users.noreply.github.com'
-          target-branch: main
-          commit-message: Update from ${{ github.ref_name }}
-          target-directory: /tmp/
+      # - name: Push to fdroid repo
+      #   if: ${{ env.IS_STABLE == 'true' }}
+      #   uses: cpina/github-action-push-to-another-repository@v1.7.2
+      #   env:
+      #     SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+      #   with:
+      #     source-directory: ./tmp/
+      #     destination-github-username: chen08209
+      #     destination-repository-name: FlClash-fdroid-repo
+      #     user-name: 'github-actions[bot]'
+      #     user-email: 'github-actions[bot]@users.noreply.github.com'
+      #     target-branch: main
+      #     commit-message: Update from ${{ github.ref_name }}
+      #     target-directory: /tmp/
 
