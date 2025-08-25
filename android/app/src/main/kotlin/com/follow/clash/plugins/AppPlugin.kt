@@ -325,7 +325,14 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         vpnCallBack = callBack
         val intent = VpnService.prepare(FlClashApplication.getAppContext())
         if (intent != null) {
-            activityRef?.get()?.startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE)
+            val activity = activityRef?.get()
+            if (activity != null) {
+                activity.startActivityForResult(intent, VPN_PERMISSION_REQUEST_CODE)
+            } else {
+                // 无法直接拉起授权页（如从快捷设置磁贴点击），给出提示并恢复状态
+                tip("需要授权，请打开应用完成授权")
+                GlobalState.runState.postValue(com.follow.clash.RunState.STOP)
+            }
             return
         }
         vpnCallBack?.invoke()
