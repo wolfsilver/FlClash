@@ -20,18 +20,14 @@ class _TileContainerState extends State<TileManager> with TileListener {
 
   @override
   void onStart() {
-    if (globalState.appState.isStart) {
-      return;
-    }
+    // Remove the early return check to ensure the start action is always processed
     globalState.appController.updateStatus(true);
     super.onStart();
   }
 
   @override
   Future<void> onStop() async {
-    if (!globalState.appState.isStart) {
-      return;
-    }
+    // Remove the early return check to ensure the stop action is always processed
     globalState.appController.updateStatus(false);
     super.onStop();
   }
