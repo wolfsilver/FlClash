@@ -1,2 +1,0 @@
-cargo:rustc-env=TOKEN=
-cargo:rerun-if-env-changed=TOKEN
