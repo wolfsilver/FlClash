@@ -1,3 +1,36 @@
+## v0.88.88
+
+- revert
+- Merge branch 'chen08209-main'
+
+- Merge branch 'main' of github.com:chen08209/FlClash into chen08209-main
+
+- Update changelog
+
+- Add android separates the core process
+
+- Support core status check and force restart
+
+- Optimize proxies page and access page
+
+- Update flutter and pub dependencies
+
+- Update go version
+
+- Optimize more details
+
+## v0.8.88-pre.5
+
+- 优化VPN权限请求处理，添加提示信息以改善用户体验；移除不必要的临时活动转移逻辑
+
+- 更新发布步骤，添加显式标签和覆盖现有资产的选项；注释掉创建Fdroid源目录的步骤
+
+## v0.8.88-pre.3
+
+- notice
+
+- Update changelog
+
 ## v0.8.88
 
 - Add android separates the core process
