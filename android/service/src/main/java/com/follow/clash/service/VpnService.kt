@@ -24,6 +24,7 @@ import com.follow.clash.service.modules.moduleLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.net.InetSocketAddress
+import android.os.ParcelFileDescriptor
 import android.net.VpnService as SystemVpnService
 
 class VpnService : SystemVpnService(), IBaseService,
@@ -31,6 +32,9 @@ class VpnService : SystemVpnService(), IBaseService,
 
     private val self: VpnService
         get() = this
+
+    // VPN接口引用，保持活跃以确保状态栏显示VPN图标
+    private var vpnInterface: ParcelFileDescriptor? = null
 
     private val loader = moduleLoader {
         install(NetworkObserveModule(self))
@@ -44,6 +48,17 @@ class VpnService : SystemVpnService(), IBaseService,
     }
 
     override fun onDestroy() {
+        // 确保在服务销毁时关闭VPN接口
+        vpnInterface?.let {
+            try {
+                it.close()
+                GlobalState.log("VPN interface closed in onDestroy")
+            } catch (e: Exception) {
+                GlobalState.log("Error closing VPN interface in onDestroy: ${e.message}")
+            }
+        }
+        vpnInterface = null
+
         handleDestroy()
         super.onDestroy()
     }
@@ -220,8 +235,12 @@ class VpnService : SystemVpnService(), IBaseService,
                     )
                 )
             }
-            establish()?.detachFd()
+            // 建立VPN连接并保持接口引用以确保状态栏显示VPN图标
+            vpnInterface = establish()
                 ?: throw NullPointerException("Establish VPN rejected by system")
+
+            // 获取文件描述符用于Core.startTun，但不分离接口
+            vpnInterface!!.fd
         }
         Core.startTun(
             fd,
@@ -243,6 +262,18 @@ class VpnService : SystemVpnService(), IBaseService,
     override fun stop() {
         loader.cancel()
         Core.stopTun()
+
+        // 关闭VPN接口
+        vpnInterface?.let {
+            try {
+                it.close()
+                GlobalState.log("VPN interface closed")
+            } catch (e: Exception) {
+                GlobalState.log("Error closing VPN interface: ${e.message}")
+            }
+        }
+        vpnInterface = null
+
         stopSelf()
     }
 
