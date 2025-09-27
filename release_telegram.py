@@ -54,6 +54,10 @@ if os.path.exists(release):
     with open(release, 'r') as f:
         text += f.read()
     text += "\n"
+print("message to send:", text)
+
+if len(text) > 800:
+    text = text[:800] + "\n..."
 
 if media:
     media[-1]["caption"] = text
