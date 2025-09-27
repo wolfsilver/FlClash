@@ -1,17 +1,13 @@
 package com.follow.clash
 
-import android.annotation.SuppressLint
-import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import com.follow.clash.common.QuickAction
-import com.follow.clash.common.quickIntent
-import com.follow.clash.common.toPendingIntent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TileService : TileService() {
     private var scope: CoroutineScope? = null
@@ -38,14 +34,18 @@ class TileService : TileService() {
         }
     }
 
-    @SuppressLint("StartActivityAndCollapseDeprecated")
     private fun handleToggle() {
-        val intent = QuickAction.TOGGLE.quickIntent
-        val pendingIntent = intent.toPendingIntent
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startActivityAndCollapse(pendingIntent)
-        } else {
-            @Suppress("DEPRECATION") startActivityAndCollapse(intent)
+        // 直接在TileService中处理开关逻辑，避免启动Activity
+        // 这样可以保持通知栏/快速设置面板打开状态
+        scope?.launch {
+            // 立即更新Tile状态以提供用户反馈
+            withContext(Dispatchers.Main) {
+                qsTile?.state = Tile.STATE_UNAVAILABLE
+                qsTile?.updateTile()
+            }
+
+            // 执行开关逻辑
+            State.handleToggleAction()
         }
     }
 
