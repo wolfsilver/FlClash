@@ -105,7 +105,7 @@ jobs:
         if: ${{ env.IS_STABLE == 'true' }}
         run: |
           tags=($(git tag --merged $(git rev-parse HEAD) --sort=-creatordate))
-          preTag=$(grep -oP '^## \K.*' CHANGELOG.md | head -n 1)
+          preTag=$(grep -oP '^## \K.*' ICHANGELOG.md | head -n 1)
           currentTag=""
           for ((i = 0; i <= ${#tags[@]}; i++)); do
             if (( i < ${#tags[@]} )); then
@@ -130,13 +130,13 @@ jobs:
             fi
             currentTag=$tag
           done
-          cat CHANGELOG.md >> NEW_CHANGELOG.md
-          cat NEW_CHANGELOG.md > CHANGELOG.md
+          cat ICHANGELOG.md >> NEW_CHANGELOG.md
+          cat NEW_CHANGELOG.md > ICHANGELOG.md
 
       - name: Commit
         if: ${{ env.IS_STABLE == 'true' }}
         run: |
-          git add CHANGELOG.md
+          git add ICHANGELOG.md
           if ! git diff --cached --quiet; then
             echo "Commit pushing"
             git config --local user.email "2452450+wolfsilver@users.noreply.github.com"
@@ -206,15 +206,15 @@ jobs:
             currentTag=$tag
           done
 
-      # - name: Push to telegram
-      #   env:
-      #     TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      #     TAG: ${{ github.ref_name }}
-      #     RUN_ID: ${{ github.run_id }}
-      #   run: |
-      #     python -m pip install --upgrade pip
-      #     pip install requests
-      #     python release_telegram.py
+      - name: Push to telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+          python release_telegram.py
 
       - name: Patch release.md
         run: |
@@ -240,7 +240,7 @@ jobs:
           body_path: './release.md'
           # ensure we create a normal release and overwrite existing assets if needed
           draft: false
-          prerelease: false
+          prerelease: ${{ env.IS_STABLE != 'true' }}
           overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
