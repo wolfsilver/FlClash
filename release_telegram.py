@@ -56,8 +56,10 @@ if os.path.exists(release):
     text += "\n"
 print("message to send:", text)
 
-if len(text) > 800:
-    text = text[:800] + "\n..."
+# text 最多展示8行
+text_lines = text.strip().split("\n")
+if len(text_lines) > 8:
+    text = "\n".join(text_lines[:8]) + "\n..."
 
 if media:
     media[-1]["caption"] = text
