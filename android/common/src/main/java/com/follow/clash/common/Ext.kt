@@ -113,16 +113,15 @@ fun Service.startForeground(notification: Notification) {
             channel = NotificationChannel(
                 GlobalState.NOTIFICATION_CHANNEL,
                 "SERVICE_CHANNEL",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            // 进一步减少通知的干扰性，特别适用于VPN等后台服务
-            channel.setShowBadge(false)
-            channel.enableLights(false)
-            channel.enableVibration(false)
-            channel.setSound(null, null)
-            // 对于Android 8.0+，尝试隐藏状态栏图标
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                channel.lockscreenVisibility = Notification.VISIBILITY_SECRET
+                NotificationManager.IMPORTANCE_MIN
+            ).apply {
+                // 禁用状态栏图标显示
+                setShowBadge(false)
+                enableLights(false)
+                enableVibration(false)
+                setSound(null, null)
+                // 隐藏在锁屏上的显示
+                lockscreenVisibility = Notification.VISIBILITY_SECRET
             }
             manager?.createNotificationChannel(channel)
         }
