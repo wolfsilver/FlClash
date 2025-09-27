@@ -108,24 +108,40 @@ val Intent.toPendingIntent: PendingIntent
 fun Service.startForeground(notification: Notification) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         val manager = getSystemService(NotificationManager::class.java)
-        var channel = manager?.getNotificationChannel(GlobalState.NOTIFICATION_CHANNEL)
-        if (channel == null) {
-            channel = NotificationChannel(
-                GlobalState.NOTIFICATION_CHANNEL,
-                "SERVICE_CHANNEL",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            // 进一步减少通知的干扰性，特别适用于VPN等后台服务
-            channel.setShowBadge(false)
-            channel.enableLights(false)
-            channel.enableVibration(false)
-            channel.setSound(null, null)
-            // 对于Android 8.0+，尝试隐藏状态栏图标
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                channel.lockscreenVisibility = Notification.VISIBILITY_SECRET
-            }
-            manager?.createNotificationChannel(channel)
+        val channelId = GlobalState.NOTIFICATION_CHANNEL
+        val desiredImportance = NotificationManager.IMPORTANCE_MIN
+        val existingChannel = manager?.getNotificationChannel(channelId)
+
+        fun NotificationChannel.applyForegroundDefaults() {
+            setShowBadge(false)
+            enableLights(false)
+            enableVibration(false)
+            setSound(null, null)
+            lockscreenVisibility = Notification.VISIBILITY_SECRET
         }
+
+        val channel = when {
+            existingChannel == null -> NotificationChannel(
+                channelId,
+                "SERVICE_CHANNEL",
+                desiredImportance
+            ).apply { applyForegroundDefaults() }
+
+            existingChannel.importance != desiredImportance -> {
+                manager?.deleteNotificationChannel(channelId)
+                NotificationChannel(
+                    channelId,
+                    "SERVICE_CHANNEL",
+                    desiredImportance
+                ).apply { applyForegroundDefaults() }
+            }
+
+            else -> existingChannel.apply {
+                applyForegroundDefaults()
+            }
+        }
+
+        manager?.createNotificationChannel(channel)
     }
     startForegroundCompat(GlobalState.NOTIFICATION_ID, notification)
 }
