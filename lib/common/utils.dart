@@ -89,7 +89,7 @@ class Utils {
       final hours = totalHours % 24;
       final inMinutes = (diff / 60 % 60).floor();
       final inSeconds = (diff % 60).floor();
-      return '${days}d${getDateStringLast2(hours)}:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
+      return '${days}d ${getDateStringLast2(hours)}:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
     }
     
     final inMinutes = (diff / 60 % 60).floor();
