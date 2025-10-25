@@ -83,11 +83,13 @@ class _StartButtonState extends ConsumerState<StartButton>
       child: AnimatedBuilder(
         animation: _controller!.view,
         builder: (_, child) {
+          final runTime = ref.watch(runTimeProvider);
+          final text = utils.getTimeText(runTime);
           final textWidth =
               globalState.measure
                   .computeTextSize(
                     Text(
-                      utils.getTimeDifference(DateTime.now()),
+                      text,
                       style: context.textTheme.titleMedium?.toSoftBold,
                     ),
                   )

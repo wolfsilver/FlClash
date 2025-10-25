@@ -82,8 +82,8 @@ class Utils {
     }
     final diff = timeStamp / 1000;
     final totalHours = (diff / 3600).floor();
-    
-    // If hours exceed 24, show days format: xdHH:mm:ss
+
+    // If hours exceed 24, show days format: xd HH:mm:ss
     if (totalHours >= 24) {
       final days = (totalHours / 24).floor();
       final hours = totalHours % 24;
@@ -91,7 +91,7 @@ class Utils {
       final inSeconds = (diff % 60).floor();
       return '${days}d ${getDateStringLast2(hours)}:${getDateStringLast2(inMinutes)}:${getDateStringLast2(inSeconds)}';
     }
-    
+
     final inMinutes = (diff / 60 % 60).floor();
     final inSeconds = (diff % 60).floor();
 
