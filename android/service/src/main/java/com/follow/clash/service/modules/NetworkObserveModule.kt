@@ -12,6 +12,11 @@ import android.os.Build
 import androidx.core.content.getSystemService
 import com.follow.clash.core.Core
 import com.follow.clash.common.PerformanceConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress

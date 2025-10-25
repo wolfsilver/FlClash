@@ -18,7 +18,7 @@ import com.follow.clash.service.models.getIpv4RouteAddress
 import com.follow.clash.service.models.getIpv6RouteAddress
 import com.follow.clash.service.models.toCIDR
 import com.follow.clash.service.modules.NetworkObserveModule
-import com.follow.clash.BuildConfig
+import com.follow.clash.service.BuildConfig
 import com.follow.clash.common.PerformanceConfig
 import com.follow.clash.service.modules.NotificationModule
 import com.follow.clash.service.modules.SuspendModule
