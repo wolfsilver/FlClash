@@ -136,13 +136,15 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
             }
 
             "getPackages" -> {
-                scope.launch {
+                // Performance: heavy disk I/O moved to IO dispatcher
+                scope.launch(Dispatchers.IO) {
                     result.success(getPackagesToJson())
                 }
             }
 
             "getChinaPackageNames" -> {
-                scope.launch {
+                // Performance: DEX parsing moved to IO dispatcher
+                scope.launch(Dispatchers.IO) {
                     result.success(getChinaPackageNames())
                 }
             }
@@ -164,7 +166,8 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     private fun handleGetPackageIcon(call: MethodCall, result: Result) {
-        scope.launch {
+        // Performance: icon I/O moved to IO dispatcher
+        scope.launch(Dispatchers.IO) {
             val packageName = call.argument<String>("packageName")
             if (packageName == null) {
                 result.success("")
@@ -234,17 +237,15 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
     }
 
     private suspend fun getPackagesToJson(): String {
-        return withContext(Dispatchers.Default) {
-            Gson().toJson(getPackages())
-        }
+        // Already on IO dispatcher from caller
+        return Gson().toJson(getPackages())
     }
 
     private suspend fun getChinaPackageNames(): String {
-        return withContext(Dispatchers.Default) {
-            val packages: List<String> =
-                getPackages().map { it.packageName }.filter { isChinaPackage(it) }
-            Gson().toJson(packages)
-        }
+        // Already on IO dispatcher from caller
+        val packages: List<String> =
+            getPackages().map { it.packageName }.filter { isChinaPackage(it) }
+        return Gson().toJson(packages)
     }
 
     fun requestNotificationsPermission(callBack: () -> Unit) {

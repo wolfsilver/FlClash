@@ -18,6 +18,8 @@ import com.follow.clash.service.models.getIpv4RouteAddress
 import com.follow.clash.service.models.getIpv6RouteAddress
 import com.follow.clash.service.models.toCIDR
 import com.follow.clash.service.modules.NetworkObserveModule
+import com.follow.clash.BuildConfig
+import com.follow.clash.common.PerformanceConfig
 import com.follow.clash.service.modules.NotificationModule
 import com.follow.clash.service.modules.SuspendModule
 import com.follow.clash.service.modules.moduleLoader
@@ -51,7 +53,12 @@ class VpnService : SystemVpnService(), IBaseService,
     private val connectivity by lazy {
         getSystemService<ConnectivityManager>()
     }
-    private val uidPageNameMap = mutableMapOf<Int, String>()
+    // LRU cache for UID->Package mapping (max size configurable)
+    private val uidPageNameMap = object : LinkedHashMap<Int, String>(128, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, String>?): Boolean {
+            return size > PerformanceConfig.UID_CACHE_MAX_SIZE
+        }
+    }
 
     private fun resolverProcess(
         protocol: Int,
@@ -130,16 +137,20 @@ class VpnService : SystemVpnService(), IBaseService,
         val fd = with(Builder()) {
             val cidr = IPV4_ADDRESS.toCIDR()
             addAddress(cidr.address, cidr.prefixLength)
-            Log.d(
-                "addAddress", "address: ${cidr.address} prefixLength:${cidr.prefixLength}"
-            )
+            if (BuildConfig.DEBUG && PerformanceConfig.ENABLE_VPN_DEBUG_LOGS) {
+                Log.d(
+                    "addAddress", "address: ${cidr.address} prefixLength:${cidr.prefixLength}"
+                )
+            }
             val routeAddress = options.getIpv4RouteAddress()
             if (routeAddress.isNotEmpty()) {
                 try {
                     routeAddress.forEach { i ->
-                        Log.d(
-                            "addRoute4", "address: ${i.address} prefixLength:${i.prefixLength}"
-                        )
+                        if (BuildConfig.DEBUG) {
+                            Log.d(
+                                "addRoute4", "address: ${i.address} prefixLength:${i.prefixLength}"
+                            )
+                        }
                         addRoute(i.address, i.prefixLength)
                     }
                 } catch (_: Exception) {
@@ -151,14 +162,18 @@ class VpnService : SystemVpnService(), IBaseService,
             if (options.ipv6) {
                 try {
                     val cidr = IPV6_ADDRESS.toCIDR()
-                    Log.d(
-                        "addAddress6", "address: ${cidr.address} prefixLength:${cidr.prefixLength}"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            "addAddress6", "address: ${cidr.address} prefixLength:${cidr.prefixLength}"
+                        )
+                    }
                     addAddress(cidr.address, cidr.prefixLength)
                 } catch (_: Exception) {
-                    Log.d(
-                        "addAddress6", "IPv6 is not supported."
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            "addAddress6", "IPv6 is not supported."
+                        )
+                    }
                 }
 
                 try {
@@ -166,10 +181,12 @@ class VpnService : SystemVpnService(), IBaseService,
                     if (routeAddress.isNotEmpty()) {
                         try {
                             routeAddress.forEach { i ->
-                                Log.d(
-                                    "addRoute6",
-                                    "address: ${i.address} prefixLength:${i.prefixLength}"
-                                )
+                                if (BuildConfig.DEBUG) {
+                                    Log.d(
+                                        "addRoute6",
+                                        "address: ${i.address} prefixLength:${i.prefixLength}"
+                                    )
+                                }
                                 addRoute(i.address, i.prefixLength)
                             }
                         } catch (_: Exception) {
@@ -186,7 +203,8 @@ class VpnService : SystemVpnService(), IBaseService,
             if (options.ipv6) {
                 addDnsServer(DNS6)
             }
-            setMtu(9000)
+            // Optimized MTU: configurable via PerformanceConfig
+            setMtu(PerformanceConfig.TUN_MTU)
             options.accessControl.let { accessControl ->
                 if (accessControl.enable) {
                     when (accessControl.mode) {
@@ -213,7 +231,9 @@ class VpnService : SystemVpnService(), IBaseService,
                 allowBypass()
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && options.systemProxy) {
-                GlobalState.log("Open http proxy")
+                if (BuildConfig.DEBUG) {
+                    GlobalState.log("Open http proxy")
+                }
                 setHttpProxy(
                     ProxyInfo.buildDirectProxy(
                         "127.0.0.1", options.port, options.bypassDomain

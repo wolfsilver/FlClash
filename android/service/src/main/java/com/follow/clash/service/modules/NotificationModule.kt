@@ -16,6 +16,7 @@ import com.follow.clash.common.receiveBroadcastFlow
 import com.follow.clash.common.startForeground
 import com.follow.clash.common.tickerFlow
 import com.follow.clash.common.toPendingIntent
+import com.follow.clash.common.PerformanceConfig
 import com.follow.clash.core.Core
 import com.follow.clash.service.R
 import com.follow.clash.service.State
@@ -46,6 +47,9 @@ val NotificationParams.extended: ExtendedNotificationParams
 class NotificationModule(private val service: Service) : Module() {
     private val scope = CoroutineScope(Dispatchers.Default)
 
+    // Performance optimization: throttle notification updates
+    private var lastContentText = ""
+
     override fun onInstall() {
         scope.launch {
             val screenFlow = service.receiveBroadcastFlow {
@@ -58,10 +62,13 @@ class NotificationModule(private val service: Service) : Module() {
             }
 
             combine(
-                tickerFlow(1000, 0), State.notificationParamsFlow, screenFlow
+                tickerFlow(PerformanceConfig.NOTIFICATION_UPDATE_INTERVAL_MS, 0), State.notificationParamsFlow, screenFlow
             ) { _, params, screenOn ->
                 params?.extended to screenOn
-            }.filter { (params, screenOn) -> params != null && screenOn }
+            }.filter { (params, screenOn) ->
+                params != null && screenOn &&
+                (!PerformanceConfig.NOTIFICATION_SKIP_IDENTICAL_UPDATES || params.contentText != lastContentText)
+            }
                 .distinctUntilChanged { old, new -> old.first == new.first && old.second == new.second }
                 .collect { (params, _) ->
                     update(params!!)
@@ -105,6 +112,7 @@ class NotificationModule(private val service: Service) : Module() {
     }
 
     private fun update(params: ExtendedNotificationParams) {
+        lastContentText = params.contentText
         service.startForeground(
             with(notificationBuilder) {
                 setContentTitle(params.title)

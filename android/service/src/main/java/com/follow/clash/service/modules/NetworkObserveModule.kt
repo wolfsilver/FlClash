@@ -11,6 +11,7 @@ import android.net.NetworkRequest
 import android.os.Build
 import androidx.core.content.getSystemService
 import com.follow.clash.core.Core
+import com.follow.clash.common.PerformanceConfig
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -29,6 +30,9 @@ class NetworkObserveModule(private val service: Service) : Module() {
         service.getSystemService<ConnectivityManager>()
     }
     private var preDnsList = listOf<String>()
+
+    // DNS update debounce: configurable delay to batch rapid network changes
+    private var dnsUpdateJob: Job? = null
 
     private val request = NetworkRequest.Builder().apply {
         addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
@@ -96,13 +100,17 @@ class NetworkObserveModule(private val service: Service) : Module() {
     }
 
     fun onUpdateNetwork() {
-        val dnsList = (networkInfos.asSequence().minByOrNull { networkToInt(it) }?.value?.dnsList
-            ?: emptyList()).map { x -> x.asSocketAddressText(53) }
-        if (dnsList == preDnsList) {
-            return
+        dnsUpdateJob?.cancel()
+        dnsUpdateJob = kotlinx.coroutines.CoroutineScope(Dispatchers.Default).launch {
+            delay(PerformanceConfig.DNS_UPDATE_DEBOUNCE_MS)
+            val dnsList = (networkInfos.asSequence().minByOrNull { networkToInt(it) }?.value?.dnsList
+                ?: emptyList()).map { x -> x.asSocketAddressText(53) }
+            if (dnsList == preDnsList) {
+                return@launch
+            }
+            preDnsList = dnsList
+            Core.updateDNS(dnsList.toSet().joinToString(","))
         }
-        preDnsList = dnsList
-        Core.updateDNS(dnsList.toSet().joinToString(","))
     }
 
     fun setUnderlyingNetworks(network: Network) {
