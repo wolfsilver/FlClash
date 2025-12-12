@@ -1,3 +1,25 @@
+## v0.8.91
+
+- Fix windows some issues
+
+- Optimize overwrite handle
+
+- Optimize access control page
+
+- Optimize some details
+
+- 修复：StartButton 用 runTime 文本计算宽度，保证展开宽度与显示时间一致；调整 utils.dart 中天数格式注释为 "xd HH:mm:ss"
+
+## v0.8.91-pre.1
+
+- Update lib/common/utils.dart
+
+- Fix time display to show days when exceeding 24 hours
+
+- Co-authored-by: wolfsilver <2452450+wolfsilver@users.noreply.github.com>
+
+- Initial plan
+
 ## v0.8.90
 
 - Merge branch 'chen08209:main' into main
